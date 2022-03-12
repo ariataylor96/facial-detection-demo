@@ -14,11 +14,18 @@ def main(args):
 
     RED = (0, 0, 255)
     GREEN = (0, 255, 0)
+    BLUE = (255, 0, 0)
 
-    video_capture = cv2.VideoCapture(0)
+    video_capture = cv2.VideoCapture(0, cv2.CAP_V4L2)
+    video_capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G"))
+    video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    video_capture.set(cv2.CAP_PROP_FPS, 30)
 
     while True:
         ret, frame = video_capture.read()
+        if not ret:
+            continue
         center_point = [i / 2 for i in frame.shape[:2]]
         center_y_bounds, center_x_bounds = [
             (i - i * args.margin, i + i * args.margin) for i in center_point
@@ -32,14 +39,17 @@ def main(args):
                 face_cascade.detectMultiScale(
                     gray,
                     scaleFactor=1.1,
-                    minNeighbors=5,
-                    minSize=(30, 30),
+                    minNeighbors=8,
+                    minSize=(60, 60),
                 )
             )
 
         for (x, y, w, h) in faces:
             color = RED
             face_center_x, face_center_y = (x + (w / 2), (y + (h / 2)))
+
+            if face_center_x <= center_x_bounds[0]:
+                color = BLUE
 
             if (
                 center_x_bounds[0] <= face_center_x
